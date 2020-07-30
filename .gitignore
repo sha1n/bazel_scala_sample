@@ -1,2 +1,6 @@
 .ijwb
 bazel-*
+
+.bazelversion
+.bazelrc
+.bazelrc.engflow

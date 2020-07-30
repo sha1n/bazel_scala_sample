@@ -1,75 +1,54 @@
 workspace(name = "basic_scala")
 
-#rules_scala_version="326b4ce252c36aeff2232e241ff4bfd8d6f6e071" # update this as needed
-#http_archive(
-#             name = "io_bazel_rules_scala",
-#             url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip"%rules_scala_version,
-#             type = "zip",
-#             strip_prefix= "rules_scala-%s" % rules_scala_version
-#             )
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-local_repository(
+bazel_toolchains_version="3.3.0"
+bazel_toolchains_sha256="a802b753e127a6f73f3f300db5dd83fb618cd798bc880b6a87db9a8777b7939f"
+http_archive(
+    name = "bazel_toolchains",
+    urls = [
+        "https://github.com/bazelbuild/bazel-toolchains/releases/download/%s/bazel-toolchains-%s.tar.gz" % (bazel_toolchains_version, bazel_toolchains_version),
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-toolchains/archive/%s.tar.gz" % bazel_toolchains_version,
+    ],
+    strip_prefix = "bazel-toolchains-%s" % bazel_toolchains_version,
+    sha256 = bazel_toolchains_sha256,
+)
+
+load("@bazel_toolchains//rules:rbe_repo.bzl", "rbe_autoconfig")
+rbe_autoconfig(
+    name = "engflow_rbe_default",
+    detect_java_home = True,
+    #digest = "sha256:d318041b3a16e36550e42c443e856d93710e10252e7111431802fe54b99f2dc9",
+    digest = "sha256:bf084dba7794ed682dba1fdecfa7c9f924fdd7f42d35f2618826919162287629",
+    registry = "gcr.io",
+    #repository = "bazel-public/ubuntu1804-bazel-java11",
+    repository = "bazel-public/ubuntu1604-bazel-java8",
+    use_legacy_platform_definition = False,
+)
+
+
+skylib_version = "0.8.0"
+http_archive(
+    name = "bazel_skylib",
+    type = "tar.gz",
+    url = "https://github.com/bazelbuild/bazel-skylib/releases/download/{}/bazel-skylib.{}.tar.gz".format (skylib_version, skylib_version),
+    sha256 = "2ef429f5d7ce7111263289644d233707dba35e39696377ebab8b0bc701f7818e",
+)
+rules_scala_version = "fb6e0f0c9383816bddccdbb1e04c90f51a8edb89"
+rules_scala_version_sha256 = "3bd0152f59c28947020fb9717eb57f8e5093c7abd8da361780752d4088e5ea17"
+http_archive(
     name = "io_bazel_rules_scala",
-    path = "/Users/shain/code/rules_scala"
+    url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % rules_scala_version,
+    type = "zip",
+    strip_prefix = "rules_scala-%s" % rules_scala_version,
+    sha256 = rules_scala_version_sha256,
 )
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
 scala_repositories()
 
+load("@io_bazel_rules_scala//specs2:specs2_junit.bzl", "specs2_junit_dependencies", "specs2_junit_repositories")
+specs2_junit_repositories()
+
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
 scala_register_toolchains()
-
-
-load("@io_bazel_rules_scala//scala:scala_maven_import_external.bzl", "scala_maven_import_external")
-
-#
-# local second party code repository
-#
-local_repository(
-    name = "second_party_example",
-    path = "/Users/shain/code/bazel_scala_2nd_party"
-)
-
-scala_maven_import_external(
-    name = "com_typesafe_akka_akka_http_2_12",
-    artifact = "com.typesafe.akka:akka-http_2.12:10.1.4",
-    jar_sha256 = "9b8bdc14c3be4ac3f0032f664036a5d43d0c96c27bf693fba1fc5eeaf74d079b",
-    srcjar_sha256 = "55110c6acf0ddf5e1d19964d220a6823e928197009db3ee2bd62d4eb5ccecf24",
-    licenses = ["notice"],
-    fetch_sources = True,
-    server_urls = [
-      "https://repo.maven.apache.org/maven2/",
-    ],
-    deps = [
-        "@com_typesafe_akka_akka_http_core_2_12//jar",
-    ],
-)
-
-scala_maven_import_external(
-    name = "com_typesafe_akka_akka_http_core_2_12",
-    artifact = "com.typesafe.akka:akka-http-core_2.12:10.1.4",
-    jar_sha256 = "108f5d6ecb207921fd804eccec7da9853eb0011e540640ef45289cd7c3f1f26d",
-    srcjar_sha256 = "e532c4922c58c5c7ece0654694ea4d6f69cb732b5ca833d3466c360abdd82864",
-    deps = [
-      "@com_typesafe_akka_akka_parsing_2_12//jar",
-    ],
-    licenses = ["notice"],
-    fetch_sources = True,
-    server_urls = [
-      "https://repo.maven.apache.org/maven2/",
-    ],
-  )
-
-scala_maven_import_external(
-    name = "com_typesafe_akka_akka_parsing_2_12",
-    artifact = "com.typesafe.akka:akka-parsing_2.12:10.1.4",
-    jar_sha256 = "d21165ea458ecd78bbb7a92cb2225c0a82e0f3f8c1a543224597b592985ef3c8",
-    srcjar_sha256 = "a1e3a7954195497a4f6acd938829a8abe3eba80dc947a2b86b412b70d51b5ab7",
-    deps = [
-    ],
-    licenses = ["notice"],
-    fetch_sources = True,
-    server_urls = [
-      "https://repo.maven.apache.org/maven2/",
-    ],
-  )
